@@ -27,6 +27,7 @@ WORKDIR /app
 # Copy the app from the publish step
 COPY --from=publish /app/publish .
 
+ENV ASPNETCORE_URLS="https://0.0.0.0:5001"
 ENV ASPNETCORE_ENVIRONMENT=Production
 
 # Start the app

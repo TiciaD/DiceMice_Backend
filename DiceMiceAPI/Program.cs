@@ -28,14 +28,8 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
   options.KnownProxies.Clear();  // Clear default proxy restrictions
 });
 
-// Configure Kestrel to listen on HTTP in production
-if (builder.Environment.IsProduction())
-{
-  builder.WebHost.ConfigureKestrel(serverOptions =>
-  {
-    serverOptions.ListenAnyIP(5000); // Bind to port 5000 for HTTP
-  });
-}
+// Use the port from the environment variable
+var port = Environment.GetEnvironmentVariable("PORT") ?? "5000";
 
 // Check if running in production and configure URLs
 if (builder.Environment.IsProduction())
@@ -43,7 +37,7 @@ if (builder.Environment.IsProduction())
   // Use HTTP internally; Render handles HTTPS termination
   builder.WebHost.ConfigureKestrel(serverOptions =>
   {
-    serverOptions.ListenAnyIP(5000); // Bind to port 5000 for HTTP
+    serverOptions.ListenAnyIP(int.Parse(port)); // Bind to port  for HTTP
   });
 }
 else

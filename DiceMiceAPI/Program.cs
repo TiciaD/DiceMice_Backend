@@ -19,8 +19,20 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// Configure the URLs 👇
-builder.WebHost.UseUrls(builder.Configuration.GetValue<string>("App:Urls") ?? "https://localhost:5001");
+// Check if running in production and configure URLs
+if (builder.Environment.IsProduction())
+{
+  // Use HTTP internally; Render handles HTTPS termination
+  builder.WebHost.ConfigureKestrel(serverOptions =>
+  {
+    serverOptions.ListenAnyIP(5000); // Bind to port 5000 for HTTP
+  });
+}
+else
+{
+  // Default behavior for development, including HTTPS
+  builder.WebHost.UseUrls(builder.Configuration.GetValue<string>("App:Urls") ?? "https://localhost:5001");
+}
 
 // Add Database context
 builder.Services.AddDbContext<ApplicationDbContext>(options =>

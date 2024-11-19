@@ -3,6 +3,8 @@ FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
 WORKDIR /app
 EXPOSE 80
 EXPOSE 443
+# Expose only the HTTP port
+EXPOSE 5000
 
 # Use the SDK to build the application
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
@@ -27,7 +29,8 @@ WORKDIR /app
 # Copy the app from the publish step
 COPY --from=publish /app/publish .
 
-ENV ASPNETCORE_URLS="https://0.0.0.0:5001"
+# Set the ASP.NET Core URL to match Render's internal port
+ENV ASPNETCORE_URLS=http://+:5000
 ENV ASPNETCORE_ENVIRONMENT=Production
 
 # Start the app

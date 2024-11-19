@@ -18,19 +18,13 @@ builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
 // Configure the URLs 👇
-builder.WebHost.UseUrls("https://localhost:5001");
+builder.WebHost.UseUrls(builder.Configuration.GetValue<string>("App:Urls") ?? "https://localhost:5001");
 
 // Add Database context
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
-
-// builder.Services.AddSession(options =>
-// {
-//   options.Cookie.Name = "DiscordInfo";
-//   options.IdleTimeout = TimeSpan.FromDays(1);
-//   options.Cookie.IsEssential = true;
-// });
 
 builder.Services.AddAuthentication(options =>
     {

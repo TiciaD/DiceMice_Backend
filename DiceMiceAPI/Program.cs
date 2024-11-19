@@ -7,6 +7,7 @@ using DiceMiceAPI.Models;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 
@@ -18,6 +19,23 @@ builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+// Add forwarded headers configuration for proxies like Render
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+  options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+  options.KnownNetworks.Clear(); // Clear default network restrictions
+  options.KnownProxies.Clear();  // Clear default proxy restrictions
+});
+
+// Configure Kestrel to listen on HTTP in production
+if (builder.Environment.IsProduction())
+{
+  builder.WebHost.ConfigureKestrel(serverOptions =>
+  {
+    serverOptions.ListenAnyIP(5000); // Bind to port 5000 for HTTP
+  });
+}
 
 // Check if running in production and configure URLs
 if (builder.Environment.IsProduction())

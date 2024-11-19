@@ -139,7 +139,16 @@ if (app.Environment.IsDevelopment())
   app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
+
+if (app.Environment.IsProduction())
+{
+  app.UseForwardedHeaders(); // Apply forwarded headers
+}
+else
+{
+  app.UseHttpsRedirection();
+}
+
 
 app.UseAuthentication();
 app.UseAuthorization();

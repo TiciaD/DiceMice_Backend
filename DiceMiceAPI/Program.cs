@@ -112,12 +112,16 @@ builder.Services.AddAuthentication(options =>
 
           if (existingUser == null)
           {
-            // Create and save the new user
+            // Fetch the "Basic" role
+            var basicRole = await dbContext.Roles.FirstOrDefaultAsync(r => r.RoleName == "BASIC") ?? throw new InvalidOperationException("The 'Basic' role does not exist in the database.");
+
+            // Create and save the new user with the "Basic" role
             var newUser = new User
             {
-              DiscordId = discordId,
+              DiscordId = discordId ?? string.Empty,
               Email = email ?? string.Empty,
-              Avatar = avatar ?? string.Empty
+              Avatar = avatar ?? string.Empty,
+              RoleId = basicRole.Id // Assign the default role
             };
 
             dbContext.Users.Add(newUser);
@@ -149,8 +153,8 @@ else
   app.UseHttpsRedirection();
 }
 
-
 app.UseAuthentication();
+app.UseMiddleware<RoleMiddleware>();
 app.UseAuthorization();
 
 app.MapControllers();

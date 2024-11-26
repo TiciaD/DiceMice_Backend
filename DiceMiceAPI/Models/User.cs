@@ -14,5 +14,9 @@ namespace DiceMiceAPI.Models
 
     [EmailAddress]
     public string Email { get; set; } = string.Empty;
+
+    public int RoleId { get; set; } // Foreign key to Role
+    public Role Role { get; set; } = null!;
+    public House? House { get; set; } // Navigation property
   }
 }

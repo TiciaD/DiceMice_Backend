@@ -11,7 +11,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace DiceMiceAPI.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20241119004934_InitialCreate")]
+    [Migration("20241125183759_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -23,6 +23,27 @@ namespace DiceMiceAPI.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
+
+            modelBuilder.Entity("DiceMiceAPI.Models.Role", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("Permissions")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("RoleName")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Roles");
+                });
 
             modelBuilder.Entity("DiceMiceAPI.Models.User", b =>
                 {
@@ -44,9 +65,25 @@ namespace DiceMiceAPI.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<int>("RoleId")
+                        .HasColumnType("integer");
+
                     b.HasKey("Id");
 
+                    b.HasIndex("RoleId");
+
                     b.ToTable("Users");
+                });
+
+            modelBuilder.Entity("DiceMiceAPI.Models.User", b =>
+                {
+                    b.HasOne("DiceMiceAPI.Models.Role", "Role")
+                        .WithMany()
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Role");
                 });
 #pragma warning restore 612, 618
         }

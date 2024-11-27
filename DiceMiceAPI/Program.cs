@@ -97,6 +97,12 @@ builder.Services.AddAuthentication(options =>
           request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", context.AccessToken);
 
           var response = await context.Backchannel.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, context.HttpContext.RequestAborted);
+
+          if (!response.IsSuccessStatusCode)
+          {
+            throw new HttpRequestException($"Failed to retrieve user information ({response.StatusCode})");
+          }
+
           response.EnsureSuccessStatusCode();
 
           var userJson = JsonDocument.Parse(await response.Content.ReadAsStringAsync()).RootElement;

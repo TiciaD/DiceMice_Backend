@@ -3,6 +3,7 @@ using DiceMiceAPI.Data;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.EntityFrameworkCore;
 
 namespace DiceMiceAPI.Controllers;
@@ -13,7 +14,7 @@ public class AuthController : ControllerBase
 {
   [HttpGet("redirect")]
   [Authorize(AuthenticationSchemes = "Discord")]
-  public IActionResult Redirect()
+  public async Task<IActionResult> Redirect()
   {
     Console.WriteLine("Redirected!");
     // var query = HttpContext.Request.Query.ToString();
@@ -21,9 +22,28 @@ public class AuthController : ControllerBase
     // return Ok("Redirected.");
     if (User.Identity?.IsAuthenticated ?? false)
     {
-      // Authentication was successful, redirect to frontend
-      Console.WriteLine($"User authenticated: {User.Identity.Name}");
-      return Redirect("https://dicemice-frontend.onrender.com/");
+      var discordId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+      var username = User.FindFirst(ClaimTypes.Name)?.Value;
+
+      // Fetch user info from the database (optional)
+      var dbContext = HttpContext.RequestServices.GetRequiredService<ApplicationDbContext>();
+      var user = await dbContext.Users.FirstOrDefaultAsync(u => u.DiscordId == discordId);
+
+      // Create a query string with user info to send to the frontend
+      var frontendUrl = "https://dicemice-frontend.onrender.com/";
+      var queryString = new Dictionary<string, string>
+        {
+            { "discordId", discordId },
+            { "username", username },
+            { "email", user?.Email ?? "" },  // Example of additional info
+            { "avatar", user?.Avatar ?? "" }
+        };
+
+      // Build the redirect URL
+      var redirectUrl = QueryHelpers.AddQueryString(frontendUrl, queryString);
+
+      // Redirect to the frontend with the user data in the query parameters
+      return Redirect(redirectUrl);
     }
     else
     {
@@ -39,8 +59,23 @@ public class AuthController : ControllerBase
     Console.WriteLine("****************User Identity IsAuthenticated {0}", User.Identity?.IsAuthenticated);
     if (User.Identity?.IsAuthenticated ?? false)
     {
-      Console.WriteLine("User already authenticated, redirecting to frontend...");
-      return Redirect("https://dicemice-frontend.onrender.com/");
+      Console.WriteLine("User already authenticated, returning user info...");
+      var discordId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+      var username = User.FindFirst(ClaimTypes.Name)?.Value;
+
+      // Fetch the user info from the database if needed
+      var dbContext = HttpContext.RequestServices.GetRequiredService<ApplicationDbContext>();
+      var user = dbContext.Users.FirstOrDefault(u => u.DiscordId == discordId);
+
+      return Ok(new
+      {
+        IsAuthenticated = true,
+        DiscordId = discordId,
+        Username = username,
+        Email = user.Email,
+        Avatar = user.Avatar,
+        Role = user.Role.RoleName // Or any other data you need to return
+      });
     }
     else
     {
@@ -72,8 +107,8 @@ public class AuthController : ControllerBase
       var discordId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
       var username = User.FindFirst(ClaimTypes.Name)?.Value;
 
-      Response.Headers.Add("Access-Control-Allow-Origin", "https://dicemice-frontend.onrender.com");
-      Response.Headers.Add("Access-Control-Allow-Credentials", "true");
+      // Response.Headers.Add("Access-Control-Allow-Origin", "https://dicemice-frontend.onrender.com");
+      // Response.Headers.Add("Access-Control-Allow-Credentials", "true");
 
       // Retrieve user info from the database
       var dbContext = HttpContext.RequestServices.GetRequiredService<ApplicationDbContext>();
@@ -95,8 +130,8 @@ public class AuthController : ControllerBase
       });
     }
 
-    Response.Headers.Add("Access-Control-Allow-Origin", "https://dicemice-frontend.onrender.com");
-    Response.Headers.Add("Access-Control-Allow-Credentials", "true");
+    // Response.Headers.Add("Access-Control-Allow-Origin", "https://dicemice-frontend.onrender.com");
+    // Response.Headers.Add("Access-Control-Allow-Credentials", "true");
 
     return Unauthorized(new { IsAuthenticated = false });
   }

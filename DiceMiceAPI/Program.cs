@@ -75,6 +75,7 @@ builder.Services.AddAuthentication(options =>
     })
     .AddCookie(CookieAuthenticationDefaults.AuthenticationScheme, options =>
     {
+      options.LoginPath = "/auth/login";  // Redirect here if not logged in
       options.Cookie.Name = "UserLoginCookie";
       options.SlidingExpiration = true;
       options.ExpireTimeSpan = new TimeSpan(1, 0, 0); // Expires in 1 hour

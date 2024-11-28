@@ -72,6 +72,9 @@ public class AuthController : ControllerBase
       var discordId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
       var username = User.FindFirst(ClaimTypes.Name)?.Value;
 
+      Response.Headers.Add("Access-Control-Allow-Origin", "https://dicemice-frontend.onrender.com");
+      Response.Headers.Add("Access-Control-Allow-Credentials", "true");
+
       // Retrieve user info from the database
       var dbContext = HttpContext.RequestServices.GetRequiredService<ApplicationDbContext>();
       var user = await dbContext.Users.FirstOrDefaultAsync(u => u.DiscordId == discordId);
@@ -91,6 +94,9 @@ public class AuthController : ControllerBase
         Role = user.Role.RoleName
       });
     }
+
+    Response.Headers.Add("Access-Control-Allow-Origin", "https://dicemice-frontend.onrender.com");
+    Response.Headers.Add("Access-Control-Allow-Credentials", "true");
 
     return Unauthorized(new { IsAuthenticated = false });
   }

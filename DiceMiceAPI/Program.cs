@@ -181,7 +181,7 @@ builder.Services.AddCors(options =>
         policy
               .WithOrigins(
                 "https://dicemice-frontend.onrender.com", // Production frontend
-                "http://localhost:4200" // Development frontend (Angular default port)
+                "https://localhost:4200" // Development frontend (Angular default port)
               )
               .AllowAnyHeader()
               .AllowAnyMethod()

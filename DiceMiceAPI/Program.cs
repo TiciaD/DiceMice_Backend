@@ -83,6 +83,7 @@ builder.Services.AddAuthentication(options =>
         context.Response.StatusCode = StatusCodes.Status401Unauthorized;
         return Task.CompletedTask;
       };
+      options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
       options.Cookie.HttpOnly = true;
       // Only use this when the sites are on different domains
       options.Cookie.SameSite = Microsoft.AspNetCore.Http.SameSiteMode.None;
@@ -211,6 +212,7 @@ app.UseCors("AllowAllOrigins");
 
 app.UseCookiePolicy(new CookiePolicyOptions
 {
+  MinimumSameSitePolicy = SameSiteMode.None, // Enables cross-site cookies
   Secure = CookieSecurePolicy.Always
 });
 app.UseSession(); // This enables session support

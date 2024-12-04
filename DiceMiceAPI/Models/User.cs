@@ -11,6 +11,7 @@ namespace DiceMiceAPI.Models
     public string DiscordId { get; set; } = string.Empty;
 
     public string Avatar { get; set; } = string.Empty;
+    public string Username { get; set; } = string.Empty;
 
     [EmailAddress]
     public string Email { get; set; } = string.Empty;

@@ -2,7 +2,7 @@ using System.Net.Http.Headers;
 using System.Security.Claims;
 using System.Text;
 using System.Text.Json;
-using DiceMiceAPI.Data;
+using DiceMiceAPI.Helpers;
 using DiceMiceAPI.Models;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -144,6 +144,7 @@ builder.Services.AddAuthentication(options =>
           var discordId = userJson.GetProperty("id").GetString();
           var email = userJson.TryGetProperty("email", out var emailProperty) ? emailProperty.GetString() : null;
           var avatar = userJson.TryGetProperty("avatar", out var avatarProperty) ? avatarProperty.GetString() : null;
+          var username = userJson.TryGetProperty("username", out var usernameProperty) ? usernameProperty.GetString() : null;
 
           var dbContext = context.HttpContext.RequestServices.GetRequiredService<ApplicationDbContext>();
 
@@ -162,7 +163,8 @@ builder.Services.AddAuthentication(options =>
               DiscordId = discordId ?? string.Empty,
               Email = email ?? string.Empty,
               Avatar = avatar ?? string.Empty,
-              RoleId = basicRole.Id // Assign the default role
+              RoleId = basicRole.Id, // Assign the default role
+              Username = username ?? string.Empty
             };
 
             dbContext.Users.Add(newUser);

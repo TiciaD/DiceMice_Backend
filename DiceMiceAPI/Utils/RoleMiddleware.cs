@@ -1,5 +1,5 @@
 using System.Security.Claims;
-using DiceMiceAPI.Data;
+using DiceMiceAPI.Helpers;
 using Microsoft.EntityFrameworkCore;
 
 public class RoleMiddleware

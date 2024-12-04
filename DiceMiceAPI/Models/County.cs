@@ -10,6 +10,7 @@ namespace DiceMiceAPI.Models
 
     [Required]
     public string Name { get; set; } = string.Empty;
+    public string Bio { get; set; } = string.Empty;
 
     // Foreign key to Stat table
     [ForeignKey(nameof(AssociatedStat))]

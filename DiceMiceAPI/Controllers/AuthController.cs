@@ -1,5 +1,5 @@
 using System.Security.Claims;
-using DiceMiceAPI.Data;
+using DiceMiceAPI.Helpers;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -22,8 +22,8 @@ public class AuthController : ControllerBase
     // return Ok("Redirected.");
     if (User.Identity?.IsAuthenticated ?? false)
     {
-      var discordId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-      var username = User.FindFirst(ClaimTypes.Name)?.Value;
+      var discordId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "";
+      var username = User.FindFirst(ClaimTypes.Name)?.Value ?? "";
 
       // Fetch user info from the database (optional)
       var dbContext = HttpContext.RequestServices.GetRequiredService<ApplicationDbContext>();

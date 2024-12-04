@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 
-namespace DiceMiceAPI.Data
+namespace DiceMiceAPI.Helpers
 {
   public class ApplicationDbContextFactory : IDesignTimeDbContextFactory<ApplicationDbContext>
   {

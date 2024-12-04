@@ -10,9 +10,7 @@ namespace DiceMiceAPI.Models
     [Required]
     public string Name { get; set; } = string.Empty;
 
-    [Required]
-    public string Description { get; set; } = string.Empty;
-
-    public ICollection<County> Counties { get; set; } = new List<County>(); // Navigation property for one-to-many relationship
+    public string Description { get; set; } = string.Empty; // Optional description of the stat
+    public bool IsRollBased { get; set; } = false; // Whether this stat is roll-based
   }
 }

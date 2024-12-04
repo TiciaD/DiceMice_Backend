@@ -27,5 +27,6 @@ namespace DiceMiceAPI.Models
     [ForeignKey(nameof(HouseSeatCounty))]
     public int? HouseSeatCountyId { get; set; }
     public County? HouseSeatCounty { get; set; }
+    public ICollection<Character> Characters { get; set; } = new List<Character>(); // Navigation property for one-to-many relationship
   }
 }

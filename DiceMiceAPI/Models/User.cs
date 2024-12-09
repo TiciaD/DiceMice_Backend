@@ -15,6 +15,8 @@ namespace DiceMiceAPI.Models
 
     [EmailAddress]
     public string Email { get; set; } = string.Empty;
+    public string RefreshToken { get; set; } = string.Empty;
+    public DateTime? RefreshTokenExpiry { get; set; }
 
     public int RoleId { get; set; } // Foreign key to Role
     public Role Role { get; set; } = null!;

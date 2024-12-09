@@ -67,114 +67,136 @@ else
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-builder.Services.AddAuthentication(options =>
-    {
-      options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-      options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-      options.DefaultSignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-    })
-    .AddCookie(CookieAuthenticationDefaults.AuthenticationScheme, options =>
-    {
-      options.LoginPath = "/auth/login";  // Redirect here if not logged in
-      options.Cookie.Name = "UserLoginCookie";
-      options.SlidingExpiration = true;
-      options.ExpireTimeSpan = new TimeSpan(1, 0, 0); // Expires in 1 hour
-      options.Events.OnRedirectToLogin = (context) =>
-      {
-        context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-        return Task.CompletedTask;
-      };
-      options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
-      options.Cookie.HttpOnly = true;
-      // Only use this when the sites are on different domains
-      options.Cookie.SameSite = Microsoft.AspNetCore.Http.SameSiteMode.None;
-    })
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
       options.TokenValidationParameters = new TokenValidationParameters
       {
-        ValidateIssuer = false,
+        ValidateIssuer = true,
         ValidateAudience = false,
         ValidateIssuerSigningKey = true,
         ValidIssuer = builder.Configuration.GetValue<string>("Jwt:Issuer"),
-        ValidAudience = builder.Configuration.GetValue<string>("Jwt:Audience"),
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration.GetValue<string>("Jwt:EncryptionKey") ?? ""))
       };
-    })
-    .AddOAuth("Discord", options =>
-    {
-      options.AuthorizationEndpoint = "https://discord.com/oauth2/authorize";
-      options.Scope.Add("identify");
-      options.Scope.Add("email");
-
-      options.CallbackPath = new PathString("/auth/redirect");
-
-      options.ClientId = builder.Configuration.GetValue<string>("Discord:ClientId") ?? "";
-      options.ClientSecret = builder.Configuration.GetValue<string>("Discord:ClientSecret") ?? "";
-
-      options.TokenEndpoint = "https://discord.com/api/oauth2/token";
-      options.UserInformationEndpoint = "https://discord.com/api/users/@me";
-
-      options.ClaimActions.MapJsonKey(ClaimTypes.NameIdentifier, "id");
-      options.ClaimActions.MapJsonKey(ClaimTypes.Name, "username");
-
-      options.AccessDeniedPath = new PathString("/auth/accessdenied");
-
-      options.Events = new Microsoft.AspNetCore.Authentication.OAuth.OAuthEvents
+      options.Events = new JwtBearerEvents
       {
-
-        OnCreatingTicket = async context =>
+        OnChallenge = context =>
         {
-          Console.WriteLine("On Creating Ticket started.");
-          var request = new HttpRequestMessage(HttpMethod.Get, context.Options.UserInformationEndpoint);
-          request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-          request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", context.AccessToken);
-
-          var response = await context.Backchannel.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, context.HttpContext.RequestAborted);
-
-          if (!response.IsSuccessStatusCode)
-          {
-            throw new HttpRequestException($"Failed to retrieve user information ({response.StatusCode})");
-          }
-
-          response.EnsureSuccessStatusCode();
-
-          var userJson = JsonDocument.Parse(await response.Content.ReadAsStringAsync()).RootElement;
-
-          var discordId = userJson.GetProperty("id").GetString();
-          var email = userJson.TryGetProperty("email", out var emailProperty) ? emailProperty.GetString() : null;
-          var avatar = userJson.TryGetProperty("avatar", out var avatarProperty) ? avatarProperty.GetString() : null;
-          var username = userJson.TryGetProperty("username", out var usernameProperty) ? usernameProperty.GetString() : null;
-
-          var dbContext = context.HttpContext.RequestServices.GetRequiredService<ApplicationDbContext>();
-
-          Console.WriteLine("OnCreatingTicket - Look for user");
-          // Check if the user already exists
-          var existingUser = await dbContext.Users.FirstOrDefaultAsync(u => u.DiscordId == discordId);
-
-          if (existingUser == null)
-          {
-            // Fetch the "Basic" role
-            var basicRole = await dbContext.Roles.FirstOrDefaultAsync(r => r.RoleName == "BASIC") ?? throw new InvalidOperationException("The 'Basic' role does not exist in the database.");
-
-            // Create and save the new user with the "Basic" role
-            var newUser = new User
-            {
-              DiscordId = discordId ?? string.Empty,
-              Email = email ?? string.Empty,
-              Avatar = avatar ?? string.Empty,
-              RoleId = basicRole.Id, // Assign the default role
-              Username = username ?? string.Empty
-            };
-
-            dbContext.Users.Add(newUser);
-            await dbContext.SaveChangesAsync();
-          }
-          context.RunClaimActions(userJson);
-        },
+          context.HandleResponse(); // Prevent default behavior
+          context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+          context.Response.ContentType = "application/json";
+          return context.Response.WriteAsync("{\"error\":\"Unauthorized access\"}");
+        }
       };
-
     });
+// builder.Services.AddAuthentication(options =>
+//     {
+//       options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+//       options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+//       options.DefaultSignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+//     })
+//     .AddCookie(CookieAuthenticationDefaults.AuthenticationScheme, options =>
+//     {
+//       options.LoginPath = "/auth/login";  // Redirect here if not logged in
+//       options.Cookie.Name = "UserLoginCookie";
+//       options.SlidingExpiration = true;
+//       options.ExpireTimeSpan = new TimeSpan(1, 0, 0); // Expires in 1 hour
+//       options.Events.OnRedirectToLogin = (context) =>
+//       {
+//         context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+//         return Task.CompletedTask;
+//       };
+//       options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+//       options.Cookie.HttpOnly = true;
+//       // Only use this when the sites are on different domains
+//       options.Cookie.SameSite = Microsoft.AspNetCore.Http.SameSiteMode.None;
+//     })
+//     .AddJwtBearer(options =>
+//     {
+//       options.TokenValidationParameters = new TokenValidationParameters
+//       {
+//         ValidateIssuer = false,
+//         ValidateAudience = false,
+//         ValidateIssuerSigningKey = true,
+//         ValidIssuer = builder.Configuration.GetValue<string>("Jwt:Issuer"),
+//         ValidAudience = builder.Configuration.GetValue<string>("Jwt:Audience"),
+//         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration.GetValue<string>("Jwt:EncryptionKey") ?? ""))
+//       };
+//     })
+//     .AddOAuth("Discord", options =>
+//     {
+//       options.AuthorizationEndpoint = "https://discord.com/oauth2/authorize";
+//       options.Scope.Add("identify");
+//       options.Scope.Add("email");
+
+//       options.CallbackPath = new PathString("/auth/redirect");
+
+//       options.ClientId = builder.Configuration.GetValue<string>("Discord:ClientId") ?? "";
+//       options.ClientSecret = builder.Configuration.GetValue<string>("Discord:ClientSecret") ?? "";
+
+//       options.TokenEndpoint = "https://discord.com/api/oauth2/token";
+//       options.UserInformationEndpoint = "https://discord.com/api/users/@me";
+
+//       options.ClaimActions.MapJsonKey(ClaimTypes.NameIdentifier, "id");
+//       options.ClaimActions.MapJsonKey(ClaimTypes.Name, "username");
+
+//       options.AccessDeniedPath = new PathString("/auth/accessdenied");
+
+//       options.Events = new Microsoft.AspNetCore.Authentication.OAuth.OAuthEvents
+//       {
+
+//         OnCreatingTicket = async context =>
+//         {
+//           Console.WriteLine("On Creating Ticket started.");
+//           var request = new HttpRequestMessage(HttpMethod.Get, context.Options.UserInformationEndpoint);
+//           request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+//           request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", context.AccessToken);
+
+//           var response = await context.Backchannel.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, context.HttpContext.RequestAborted);
+
+//           if (!response.IsSuccessStatusCode)
+//           {
+//             throw new HttpRequestException($"Failed to retrieve user information ({response.StatusCode})");
+//           }
+
+//           response.EnsureSuccessStatusCode();
+
+//           var userJson = JsonDocument.Parse(await response.Content.ReadAsStringAsync()).RootElement;
+
+//           var discordId = userJson.GetProperty("id").GetString();
+//           var email = userJson.TryGetProperty("email", out var emailProperty) ? emailProperty.GetString() : null;
+//           var avatar = userJson.TryGetProperty("avatar", out var avatarProperty) ? avatarProperty.GetString() : null;
+//           var username = userJson.TryGetProperty("username", out var usernameProperty) ? usernameProperty.GetString() : null;
+
+//           var dbContext = context.HttpContext.RequestServices.GetRequiredService<ApplicationDbContext>();
+
+//           Console.WriteLine("OnCreatingTicket - Look for user");
+//           // Check if the user already exists
+//           var existingUser = await dbContext.Users.FirstOrDefaultAsync(u => u.DiscordId == discordId);
+
+//           if (existingUser == null)
+//           {
+//             // Fetch the "Basic" role
+//             var basicRole = await dbContext.Roles.FirstOrDefaultAsync(r => r.RoleName == "BASIC") ?? throw new InvalidOperationException("The 'Basic' role does not exist in the database.");
+
+//             // Create and save the new user with the "Basic" role
+//             var newUser = new User
+//             {
+//               DiscordId = discordId ?? string.Empty,
+//               Email = email ?? string.Empty,
+//               Avatar = avatar ?? string.Empty,
+//               RoleId = basicRole.Id, // Assign the default role
+//               Username = username ?? string.Empty
+//             };
+
+//             dbContext.Users.Add(newUser);
+//             await dbContext.SaveChangesAsync();
+//           }
+//           context.RunClaimActions(userJson);
+//         },
+//       };
+
+//     });
 
 builder.Services.AddCors(options =>
 {

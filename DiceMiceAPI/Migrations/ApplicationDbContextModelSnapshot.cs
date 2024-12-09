@@ -377,6 +377,13 @@ namespace DiceMiceAPI.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<string>("RefreshToken")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("RefreshTokenExpiry")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<int>("RoleId")
                         .HasColumnType("integer");
 

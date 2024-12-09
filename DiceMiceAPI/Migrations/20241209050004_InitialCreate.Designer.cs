@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace DiceMiceAPI.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20241203211108_InitialCreate")]
+    [Migration("20241209050004_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -379,6 +379,13 @@ namespace DiceMiceAPI.Migrations
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<string>("RefreshToken")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("RefreshTokenExpiry")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<int>("RoleId")
                         .HasColumnType("integer");

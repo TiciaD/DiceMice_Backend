@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace DiceMiceAPI.Controllers;
-[Authorize(AuthenticationSchemes = "Discord")]
+[Authorize]
 [Route("api/[controller]")]
 [ApiController]
 public class CharactersController : ControllerBase

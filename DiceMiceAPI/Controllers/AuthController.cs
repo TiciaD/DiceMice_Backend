@@ -81,19 +81,12 @@ public class AuthController(ApplicationDbContext dbContext, IConfiguration confi
     // Generate JWT token for the user
     var jwtToken = GenerateJwtToken(discordUser);
 
-    // Return user info and token
-    return Ok(new
-    {
-      Token = jwtToken,
-      existingUser.RefreshToken,
-      User = new
-      {
-        existingUser.Username,
-        existingUser.Email,
-        existingUser.Avatar,
-        existingUser.RoleId
-      }
-    });
+    // Redirect to the frontend with tokens in the query string
+    var redirectUrl = $"{_configuration["App:FrontendUrl"]}/auth/callback" +
+                      $"?token={Uri.EscapeDataString(jwtToken)}" +
+                      $"&refreshToken={Uri.EscapeDataString(existingUser.RefreshToken)}";
+
+    return Redirect(redirectUrl);
   }
 
   [HttpPost("refresh")]

@@ -89,6 +89,7 @@ builder.Services.AddCors(options =>
       {
         policy
               .WithOrigins(
+                "https://dice-mice.vercel.app",
                 "https://dicemice-frontend.onrender.com", // Production frontend
                 "https://localhost:4200", // Development frontend (Angular default port)
                 "http://localhost:3000", // Development frontend (Next default port)

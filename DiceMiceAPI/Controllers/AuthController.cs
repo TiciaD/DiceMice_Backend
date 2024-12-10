@@ -184,7 +184,7 @@ public class AuthController(ApplicationDbContext dbContext, IConfiguration confi
         ]);
 
     var response = await _httpClient.PostAsync(discordTokenUrl, content);
-
+    Console.WriteLine("discord/api/oauth2/token response {0}", response.ToString());
     if (!response.IsSuccessStatusCode) return null;
 
     var responseContent = await response.Content.ReadAsStringAsync();
@@ -200,6 +200,7 @@ public class AuthController(ApplicationDbContext dbContext, IConfiguration confi
     request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
 
     var response = await _httpClient.SendAsync(request);
+    Console.WriteLine("discord/api/users/@me response {0}", response.ToString());
     if (!response.IsSuccessStatusCode) return null;
 
     var responseContent = await response.Content.ReadAsStringAsync();

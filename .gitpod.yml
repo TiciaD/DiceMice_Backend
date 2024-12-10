@@ -3,7 +3,7 @@ image:
 
 tasks:
   - name: Restore & Build
-    init: | 
+    command: | 
       dotnet dev-certs https 
       dotnet tool install --global dotnet-ef
       export PATH="$PATH:~/.dotnet/tools"
